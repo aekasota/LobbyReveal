@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -9,13 +10,40 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace LobbyRevealOpgg
+namespace LobbyReveal
 {
     class Program
     {
         static async Task Main(string[] args)
         {
-            string lockfilePath = @"C:\Riot Games\League of Legends\lockfile";
+
+            string lockfilePath = "";
+
+            Process[] lolProcesses = Process.GetProcessesByName("LeagueClientUx");
+
+            if (lolProcesses.Length > 0)
+            {
+                try
+                {
+                    string exePath = lolProcesses[0].MainModule.FileName;
+                    string lolDirectory = Path.GetDirectoryName(exePath);
+                    lockfilePath = Path.Combine(lolDirectory, "lockfile");
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Permission error: Try opening this program as an administrator.");
+                    Console.ReadLine();
+                    return;
+                }
+            }
+
+            if (string.IsNullOrEmpty(lockfilePath) || !File.Exists(lockfilePath))
+            {
+                Console.WriteLine("Lockfile wasn't found. Is League open?.");
+                Console.ReadLine();
+                return;
+            }
+
             string lockfileContent;
 
             try
@@ -51,11 +79,9 @@ namespace LobbyRevealOpgg
 
             using var opggClient = new HttpClient();
 
-            Console.WriteLine("Okay");
-
             while (true)
             {
-                Console.WriteLine("\nPress Entenr in Champ Select.");
+                Console.WriteLine("\nPress Enter in Champ Select.");
                 Console.ReadLine();
 
                 try
